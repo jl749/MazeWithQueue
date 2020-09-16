@@ -8,14 +8,16 @@
 #define MAX_BUF_SIZE 50 //max buffer size for reading file
 
 typedef enum {
-    FALSE,
-    TRUE
-}BOOLEAN;
+    N,
+    E,
+    W,
+    S
+}NEWS;
 
 typedef struct {
-    int row;
+    int row; //coordinate
     int col;
-    BOOLEAN rtnPT;
+    NEWS from; //adjacent directions can be N,E,W,S
 }ELEMENT;
 
 ELEMENT stack[MAX_STACK_SIZE];
@@ -54,9 +56,57 @@ void printMaze(){
     }
 }
 
+void adjacent(NEWS news,ELEMENT e,char* arr){
+    int i,j,index=0;
+    for(i=-1;i<=1;i++){
+        for(j=-1;j<=1;j++){
+            if(abs(i)^abs(j)){ //xor, exclude diagonal adjacents
+                *(arr+index)=(maze[e.col+i][e.row+j]==1) ? 1 : 0;
+                index++;
+            }
+        }
+    }
+    for(i=0;i<4;i++){ //for each direction NEWS
+        if(news==i) //exclude direction element came from
+            *(arr+i)=0;
+    }
+}
+char* allocAdjacent(ELEMENT e){ //return an array showing adjacents (1/0)
+    char* dir=(char*)malloc(5); //4+1(sum)
+    switch(e.from){
+        case N: //0
+            adjacent(N,e,dir);
+            break;
+        case E: //1
+            adjacent(E,e,dir);
+            break;
+        case W: //2
+            adjacent(W,e,dir);
+            break;
+        case S: //3
+            adjacent(S,e,dir);
+            break;
+    }
+    int i; char sum;
+    for(i=0;i<5;i++){sum+=dir[i];}   dir[4]=sum;
+    return dir;   //////////////////////////////////////////FREEEEEEEEEEEEEEEEEEEEEEEEEEEE
+}
+
+void find_path(ELEMENT e){ //recursive?
+    //while(only one way) proceed(top++), if stuck return -1(reset stack(reset top) to 갈림길)
+    //if(갈림길) recur
+    //for(arr[N0,E0,W1,S1])else RECUR
+
+
+}
+
 int main()
 {
     init(maze);
     printMaze();
+    ELEMENT e={.row=1,.col=3,.from=N};
+    char* dir=allocAdjacent(e);
+    for(int i;i<5;i++)
+        printf("%d  ",dir[i]);
     return 0;
 }
