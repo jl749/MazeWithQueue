@@ -65,7 +65,10 @@ void adjacent(NEWS news,ELEMENT e,char* arr){
                 index++;
             }
         }
-    }
+    }  // arr=[N,W,E,S]
+    char tmp=arr[2]; //swap
+    *(arr+2)=arr[1];
+    *(arr+1)=tmp; // now arr=[N,E,W,S]
     for(i=0;i<4;i++){ //for each direction NEWS
         if(news==i) //exclude direction element came from
             *(arr+i)=0;
