@@ -20,15 +20,15 @@ typedef struct {
     NEWS from; //adjacent directions can be N,E,W,S
 }ELEMENT;
 
-ELEMENT stack[MAX_STACK_SIZE];
-char maze[MAX_COL][MAX_ROW]; //start=[1][0] , exit=[MAX_COL][MAX_ROW-1]
+ELEMENT stack[MAX_STACK_SIZE]; int top=-1; //when empty -1
+int maze[MAX_COL][MAX_ROW]; //start=[1][0] , exit=[MAX_COL][MAX_ROW-1]
 
 
 /**
 READ TXT FILE FOR MAZE
 0 = wall 1 = path
 */
-void init(char (*maze)[MAX_ROW]){
+void init(int (*maze)[MAX_ROW]){
     FILE* fp=fopen("maze.txt","rt");
     if(fp==NULL){
         puts("an error occurred while trying to create a stream");
@@ -54,6 +54,29 @@ void printMaze(){
             printf("%3d",maze[i][j]);
         }printf("\n");
     }
+}
+
+void push(ELEMENT e){
+    if(top>=MAX_STACK_SIZE-1){
+        puts("stack full");
+        return -1;
+    }
+    stack[++top]=e; // top++ , stack[top]=e;
+    puts("pushed");
+}
+ELEMENT* pop(){
+    if(top<0){
+        puts("stack empty");
+        return;
+    }
+    return &stack[top--]; //tmp=stack[top] , top-- , return tmp
+}
+ELEMENT* peek(){
+    if(top<0){
+        puts("stack empty");
+        return;
+    }
+    return &stack[top];
 }
 
 void adjacent(NEWS news,ELEMENT e,char* arr){
@@ -90,7 +113,7 @@ char* allocAdjacent(ELEMENT e){ //return an array showing adjacents (1/0)
             adjacent(S,e,dir);
             break;
     }
-    int i; char sum;
+    int i; int sum=0;
     for(i=0;i<5;i++){sum+=dir[i];}   dir[4]=sum;
     return dir;   //////////////////////////////////////////FREEEEEEEEEEEEEEEEEEEEEEEEEEEE
 }
@@ -99,17 +122,65 @@ void find_path(ELEMENT e){ //recursive?
     //while(only one way) proceed(top++), if stuck return -1(reset stack(reset top) to 갈림길)
     //if(갈림길) recur
     //for(arr[N0,E0,W1,S1])else RECUR
+    char* dir=allocAdjacent(e);
+    for(int i=0;i<5;i++)
+        printf("%d  ",dir[i]);
 
+    while(dir[4]==1){ //while one way proceed
+        push(e); ELEMENT e1;
+        int i;
+        for(i=0;i<4;i++){
+            if(dir[i]==1){ //which root available
+                    //printf("root available: %d\n",i);
+                switch(i){
+                    case N: //0
+                        e1.col=e.col-1; e1.row=e.row; e1.from=S;
+                        break;
+                    case E: //1
+                        e1.col=e.col; e1.row=e.row+1; e1.from=W;
+                        break;
+                    case W: //2
+                        e1.col=e.col; e1.row=e.row-1; e1.from=E;
+                        break;
+                    case S: //3
+                        e1.col=e.col+1; e1.row=e.row; e1.from=N;
+                        break;
+                }
+            }
+        }
+        free(dir);
+        printf("e[%d][%d],from=%d \n",e.col,e.row,e.from);
+        printf("e1[%d][%d],from=%d \n",e1.col,e1.row,e1.from);
+        puts("----------------------------------------");
+        find_path(e1);
+    }
+}
 
+void print_Answer(){
+    int ans[MAX_COL][MAX_ROW];
+    int i,j;
+    for(i=0;i<MAX_COL;i++){
+        for(j=0;j<MAX_ROW;j++){
+            ans[i][j]=' ';
+        }
+    }
+    for(i=0;i<=top;i++){
+        ans[stack[i].col][stack[i].row]='O';
+    }
+    for(i=0;i<MAX_COL;i++){
+        for(j=0;j<MAX_ROW;j++){
+            printf("%3d",ans[i][j]);
+        }printf("\n");
+    }
 }
 
 int main()
 {
     init(maze);
     printMaze();
-    ELEMENT e={.row=1,.col=3,.from=N};
-    char* dir=allocAdjacent(e);
-    for(int i;i<5;i++)
-        printf("%d  ",dir[i]);
+    ELEMENT e={.row=1,.col=1,.from=W}; //start position
+    //printf("west = %d\n",e.from);
+    find_path(e);
+    //print_Answer();
     return 0;
 }
