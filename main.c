@@ -118,20 +118,25 @@ char* allocAdjacent(ELEMENT e){ //return an array showing adjacents (1/0)
     return dir;   //////////////////////////////////////////FREEEEEEEEEEEEEEEEEEEEEEEEEEEE
 }
 
-void find_path(ELEMENT e){ //recursive?
+void find_path(ELEMENT e,int count){ //count=0 when start
     //while(only one way) proceed(top++), if stuck return -1(reset stack(reset top) to 갈림길)
     //if(갈림길) recur
     //for(arr[N0,E0,W1,S1])else RECUR
+    int i;
     char* dir=allocAdjacent(e);
+
+    fputs("directions available: ",stdout);
     for(int i=0;i<5;i++)
         printf("%d  ",dir[i]);
+    puts("");
 
-    while(dir[4]==1){ //while one way proceed
+    if(dir[4]>1) //at junction always reset count
+        count=0;
+
+    if(dir[4]>=1){ //while one way proceed
         push(e); ELEMENT e1;
-        int i;
         for(i=0;i<4;i++){
             if(dir[i]==1){ //which root available
-                    //printf("root available: %d\n",i);
                 switch(i){
                     case N: //0
                         e1.col=e.col-1; e1.row=e.row; e1.from=S;
@@ -146,13 +151,17 @@ void find_path(ELEMENT e){ //recursive?
                         e1.col=e.col+1; e1.row=e.row; e1.from=N;
                         break;
                 }
+                puts("----------------------------------------");
+                printf("WAS AT: e[%d][%d],from=%d \n",e.col,e.row,e.from);
+                printf("NOW AT: e1[%d][%d],from=%d \n",e1.col,e1.row,e1.from);
+                find_path(e1,++count);
             }
         }
         free(dir);
-        printf("e[%d][%d],from=%d \n",e.col,e.row,e.from);
-        printf("e1[%d][%d],from=%d \n",e1.col,e1.row,e1.from);
-        puts("----------------------------------------");
-        find_path(e1);
+    }else{//when dir[4]==0
+        for(i=0;i<count;i++)
+            pop();
+        return;
     }
 }
 
@@ -180,7 +189,7 @@ int main()
     printMaze();
     ELEMENT e={.row=1,.col=1,.from=W}; //start position
     //printf("west = %d\n",e.from);
-    find_path(e);
+    find_path(e,0);
     //print_Answer();
     return 0;
 }
