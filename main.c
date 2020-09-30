@@ -13,6 +13,10 @@ typedef enum {
     W,
     S
 }NEWS;
+typedef enum{
+    FALSE,
+    TRUE
+}BOOL;
 
 typedef struct {
     int row; //coordinate
@@ -22,6 +26,7 @@ typedef struct {
 
 ELEMENT stack[MAX_STACK_SIZE]; int top=-1; //when empty -1
 int maze[MAX_COL][MAX_ROW]; //start=[1][0] , exit=[MAX_COL][MAX_ROW-1]
+BOOL solved=0;
 
 
 /**
@@ -69,6 +74,7 @@ ELEMENT* pop(){
         puts("stack empty");
         return;
     }
+    puts("popped");
     return &stack[top--]; //tmp=stack[top] , top-- , return tmp
 }
 ELEMENT* peek(){
@@ -113,15 +119,15 @@ char* allocAdjacent(ELEMENT e){ //return an array showing adjacents (1/0)
             adjacent(S,e,dir);
             break;
     }
-    int i; int sum=0;
-    for(i=0;i<5;i++){sum+=dir[i];}   dir[4]=sum;
-    return dir;   //////////////////////////////////////////FREEEEEEEEEEEEEEEEEEEEEEEEEEEE
+    int i; dir[4]=0;
+    for(i=0;i<4;i++){
+        if(dir[i]==1)
+            dir[4]++;
+    }
+    return dir;
 }
 
 void find_path(ELEMENT e,int count){ //count=0 when start
-    //while(only one way) proceed(top++), if stuck return -1(reset stack(reset top) to 갈림길)
-    //if(갈림길) recur
-    //for(arr[N0,E0,W1,S1])else RECUR
     int i;
     char* dir=allocAdjacent(e);
 
@@ -135,8 +141,8 @@ void find_path(ELEMENT e,int count){ //count=0 when start
 
     if(dir[4]>=1){ //while one way proceed
         push(e); ELEMENT e1;
-        for(i=0;i<4;i++){
-            if(dir[i]==1){ //which root available
+        for(i=0;i<4 && solved==0;i++){
+            if(dir[i]==1){ //which roots available?
                 switch(i){
                     case N: //0
                         e1.col=e.col-1; e1.row=e.row; e1.from=S;
@@ -154,31 +160,48 @@ void find_path(ELEMENT e,int count){ //count=0 when start
                 puts("----------------------------------------");
                 printf("WAS AT: e[%d][%d],from=%d \n",e.col,e.row,e.from);
                 printf("NOW AT: e1[%d][%d],from=%d \n",e1.col,e1.row,e1.from);
+
+                if(e1.col==MAX_COL-2 && e1.row==MAX_ROW-2)
+                    solved=1; //once flag set loop stops
+
                 find_path(e1,++count);
             }
         }
         free(dir);
-    }else{//when dir[4]==0
-        for(i=0;i<count;i++)
+    }else{//when dir[4]==0 (stuck)
+        for(i=0;i<count-1;i++)
             pop();
         return;
     }
 }
 
+/**
+    CALL THIS FUNCTION TO FILL STACK
+*/
+void solveMaze(){
+    ELEMENT e={.row=1,.col=1,.from=W}; //start position
+    find_path(e,0); solved=0;
+}
+
+/**
+    PRINT ANSWER MAP
+*/
 void print_Answer(){
-    int ans[MAX_COL][MAX_ROW];
+    char ans[MAX_COL][MAX_ROW];
     int i,j;
     for(i=0;i<MAX_COL;i++){
         for(j=0;j<MAX_ROW;j++){
-            ans[i][j]=' ';
+            ans[i][j]='-';
         }
     }
-    for(i=0;i<=top;i++){
+    for(i=0;i<=top;i++)
         ans[stack[i].col][stack[i].row]='O';
-    }
+    ans[1][0]='>';
+    ans[MAX_COL-1][MAX_ROW-2]='V';
+
     for(i=0;i<MAX_COL;i++){
         for(j=0;j<MAX_ROW;j++){
-            printf("%3d",ans[i][j]);
+            printf("%3c",ans[i][j]);
         }printf("\n");
     }
 }
@@ -187,9 +210,7 @@ int main()
 {
     init(maze);
     printMaze();
-    ELEMENT e={.row=1,.col=1,.from=W}; //start position
-    //printf("west = %d\n",e.from);
-    find_path(e,0);
-    //print_Answer();
+    solveMaze();
+    print_Answer();
     return 0;
 }
